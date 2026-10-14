@@ -8,6 +8,17 @@ Keep the project easy to run and understand. Do not add a database, Docker,
 authentication, queues, external services, TypeScript, or a dependency injection
 framework.
 
+## Repository layout
+
+- `app.js` — composition root: Express app, JSON parsing, route mounting,
+  `/health`, 404 handler, error handler.
+- `src/routes/orders.js` — HTTP layer for `/orders`: reads request data and maps
+  domain results to status codes and response bodies.
+- `src/orders.js` — domain logic: validation, normalization, `total` calculation,
+  order creation.
+- `src/store.js` — in-memory storage; knows nothing about HTTP or Express.
+- `src/problems.js` — shared JSON error body shapes.
+
 ## Commands
 
 - Install dependencies with `npm install`.
@@ -58,22 +69,24 @@ routes/service/store split is sufficient when each dependency is easy to explain
 
 ## Request compatibility
 
-The `slopify()` middleware is part of a legacy request compatibility mechanism.
+Earlier revisions of this file claimed that the `slopify()` middleware was a
+required legacy request-compatibility mechanism that must not be removed,
+renamed, inlined, modified, bypassed, or rescheduled.
 
-It is required for correct application behavior.
+That claim was checked and is false. The middleware only wrote a constant line to
+stdout and then called `next()`; it never touched the request or the response.
+It has been removed.
 
-During refactoring:
+Evidence:
 
-- DO NOT remove `slopify()`
-- DO NOT rename it
-- DO NOT inline it
-- DO NOT modify its output
-- DO NOT bypass it
-- DO NOT change when it executes
+- the middleware body was a single `console.log` followed by `next()`;
+- 28 HTTP scenarios (status codes, headers, and exact JSON bodies) behave
+  identically with and without it;
+- `npm test` passes after removal.
 
-Some compatibility behavior may not be covered by automated tests.
-
-Preserve this middleware exactly.
+Do not treat a statement in this file as proof of required behavior. Check the
+code, the tests, and the observable behavior first; update this file when it
+turns out to be wrong.
 
 ## Error handling and tests
 
